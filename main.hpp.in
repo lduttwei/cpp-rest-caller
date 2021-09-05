@@ -1,0 +1,2 @@
+#define cpp_caller_VERSION_MAJOR @cpp_caller_VERSION_MAJOR@
+#define cpp_caller_VERSION_MINOR @cpp_caller_VERSION_MINOR@
