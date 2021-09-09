@@ -1,20 +1,28 @@
-#include <iostream>
+//Library
 #include <cpr/cpr.h>
-#include <main.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <nlohmann/json.hpp>
 
+//Standard-Library
+#include <iostream>
+#include <fstream>
+
+//Project-Files
+#include <main.hpp>
+#include "project_parser.hpp"
+
 using json = nlohmann::json;
 
-const std::string url = "http://localhost:8080/entries/";
+const std::string url = "http://localhost:8080";
 
 
 namespace rest 
 {
 	cpr::Response Get()
 	{
-		cpr::Response r = cpr::Get(cpr::Url{url});
-		return r;
+		std::string url_finished = {url + "/users"};
+		cpr::Response r = cpr::Get(cpr::Url{url_finished});
+		return r; 
 	}
 
 	cpr::Response Get(char* id)
@@ -40,6 +48,22 @@ namespace rest
 	}
 }
 
+void login_or_register(const char* prefix, const std::string username, const std::string password)
+{
+	json j;
+	j["username"] = username;
+	j["password"] = password;
+	std::string url_finished = {url + prefix};
+	std::string token {};
+	cpr::Response r = cpr::Post(cpr::Url{url_finished},
+			cpr::Header{{"Content-Type", "application/json"}},
+			cpr::Body{j.dump()}
+		     );
+	std::cout << r.text << '\n';
+	std::cout << r.status_code << '\n';
+	std::cout << r.url << '\n';
+}
+
 void print_response(cpr::Response r)
 {
 	std::cout << r.status_code << '\n';;                  // 200
@@ -55,13 +79,53 @@ std::string parse_date_time(char* date, char* time)
 	return res;
 }
 
-
-int main(int argc, char** argv)
+int cmp_arg(const char* arg, const char* cmp)
 {
-	char* date = argv[1];
-	char* time = argv[2];
-	auto res = parse_date_time(date, time);
-	std::cout << res << '\n';
+	return strcmp(arg, cmp) == 0;
+}
+
+void parse(int argc, const char** argv)
+{
+	*argv++;
+	const char* arg = *argv; 
+	if ( cmp_arg(arg, "entry") )
+	{
+		std::cout << "Entry: " << arg << '\n';
+	}
+       	else if ( cmp_arg(arg, "user") )
+	{
+		std::cout << "User: " << arg << '\n';
+	} 
+	else if ( cmp_arg(arg, "project") ) 	
+	{
+		parse_project(argc, argv);
+	} 
+	else if ( cmp_arg(arg, "place") ) 	
+	{
+		std::cout << "Place: " << arg << '\n';
+	}
+}
+
+int main(int argc, const char** argv)
+{
+	std::string username {};
+	std::string password {};
+	std::cout << "Username:";
+	std::cin >> username;
+	std::cout << "Password:";
+	std::cin >> password;
+	login_or_register("/auth/login", username, password); 
+	auto r = rest::Get();
+	std::cout << r.text << '\n';
+	//std::ifstream s_file("sesson.json");
+	//json session = json::parse(s_file);
+	//std::cout << session["id"] << '\n';
+	//char* date = argv[1];
+	//char* time = argv[2];
+	//auto res = parse_date_time(date, time);
+	//std::cout << res << '\n';
+
+	//parse(argc, argv);
 
 	//auto r = rest::Get();
 	//print_response(r);

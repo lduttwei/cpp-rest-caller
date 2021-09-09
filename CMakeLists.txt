@@ -6,7 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
 
-add_executable(cpp_caller main.cpp)
+add_executable(cpp_caller 
+	main.cpp
+	project_parser.cpp
+	)
 
 include(FetchContent)
 
