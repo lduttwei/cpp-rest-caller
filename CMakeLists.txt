@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED true)
 add_executable(cpp_caller 
 	main.cpp
 	project_parser.cpp
+	session.cpp
 	)
 
 include(FetchContent)
@@ -25,7 +26,6 @@ configure_file(main.hpp.in main.hpp)
 target_include_directories(cpp_caller PUBLIC
 	"${PROJECT_BINARY_DIR}"
 	)
-
 
 	
 target_link_libraries(cpp_caller 
