@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED true)
 add_executable(cpp_caller 
 	main.cpp
 	project_parser.cpp
+	user_parser.cpp
 	session.cpp
 	)
 

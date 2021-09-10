@@ -9,6 +9,7 @@
 //Project-Files
 #include <main.hpp>
 #include "project_parser.hpp"
+#include "user_parser.hpp"
 #include "parse_utility.hpp"
 #include "session.hpp"
 
@@ -125,9 +126,28 @@ void not_authenticated_parse(int argc, const char** argv)
 	}
 	else
 	{
-		std::cout << "HELP" << '\n';
+		std::cout << 
+			"Usage: [OPTION]\n" <<
+			"OPTIONS:               \n" << 
+			"	login             \n"  
+			"	register          \n"  
+
+			;
 	}
 
+}
+
+void start_mssg()
+{
+	json prev_session = get_session();
+	if ( !prev_session["active"] )
+	{
+		std::cout << "Currently not logged in" << '\n';
+	}
+	else
+	{
+		std::cout << "Currently logged in as " << prev_session["username"] << '\n';
+	}
 }
 
 void parse(int argc, const char** argv)
@@ -139,23 +159,28 @@ void parse(int argc, const char** argv)
 		const char* arg = *argv; 
 		if ( cmp_arg(arg, "entry") )
 		{
+			start_mssg();
 			std::cout << "Entry: " << arg << '\n';
 		}
 		else if ( cmp_arg(arg, "user") )
 		{
-			std::cout << "User: " << arg << '\n';
+			start_mssg();
+			parse_user(argc, argv);
 		} 
 		else if ( cmp_arg(arg, "project") ) 	
 		{
+			start_mssg();
 			parse_project(argc, argv);
 		} 
 		else if ( cmp_arg(arg, "place") ) 	
 		{
+			start_mssg();
 			std::cout << "Place: " << arg << '\n';
 		}
 		else if ( cmp_arg(arg, "logout") ) 	
 		{
 			write_session("", false, 0, "");
+			std::cout << "now logged out" << '\n';
 		}
 	}
 	else
@@ -164,6 +189,8 @@ void parse(int argc, const char** argv)
 			"Usage: [ENTITY] [ACTION]\n" <<
 			"entities:               \n" << 
 			"	project          \n"  
+			"	user          \n"  
+			"	logout           \n"  
 			;
 	}
 }
@@ -173,12 +200,10 @@ int main(int argc, const char** argv)
 	json prev_session = get_session();
 	if ( !prev_session["active"] )
 	{
-		std::cout << "Currently not logged in" << '\n';
 		not_authenticated_parse(argc, argv);
 	}
 	else
 	{
-		std::cout << "Currently logged in as " << prev_session["username"] << '\n';
 		parse(argc, argv);
 	}
 	return 0;
