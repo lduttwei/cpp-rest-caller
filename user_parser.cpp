@@ -202,6 +202,10 @@ namespace user
 				}
 			}
 		}
+		else
+		{
+			help();
+		}
 	}
 }
 

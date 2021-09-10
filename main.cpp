@@ -15,6 +15,17 @@
 
 using json = nlohmann::json;
 
+void help()
+{
+		std::cout << 
+			"Usage: [ENTITY] [ACTION]\n" <<
+			"entities:               \n" << 
+			"	project          \n"  
+			"	user          \n"  
+			"	logout           \n"  
+			;
+}
+
 cpr::Response register_user(const char* prefix, const std::string username, const std::string password)
 {
 	json j;
@@ -182,16 +193,14 @@ void parse(int argc, const char** argv)
 			write_session("", false, 0, "");
 			std::cout << "now logged out" << '\n';
 		}
+		else
+		{
+			help();
+		}
 	}
 	else
 	{
-		std::cout << 
-			"Usage: [ENTITY] [ACTION]\n" <<
-			"entities:               \n" << 
-			"	project          \n"  
-			"	user          \n"  
-			"	logout           \n"  
-			;
+		help();
 	}
 }
 

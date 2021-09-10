@@ -169,6 +169,10 @@ namespace project
 
 			}
 		}
+		else
+		{
+			project::help();
+		}
 	}
 }
 
