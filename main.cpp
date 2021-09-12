@@ -8,10 +8,10 @@
 
 //Project-Files
 #include <main.hpp>
-#include "project_parser.hpp"
-#include "user_parser.hpp"
-#include "parse_utility.hpp"
-#include "session.hpp"
+#include "project/project_parser.hpp"
+#include "user/user_parser.hpp"
+#include "utility/parse_utility.hpp"
+#include "session/session.hpp"
 
 using json = nlohmann::json;
 
@@ -31,7 +31,7 @@ cpr::Response register_user(const char* prefix, const std::string username, cons
 	json j;
 	j["username"] = username;
 	j["password"] = password;
-	std::string url_finished = {getUrl() + prefix};
+	std::string url_finished = {Url() + prefix};
 	cpr::Response r = cpr::Post(cpr::Url{url_finished},
 			cpr::Header{{"Content-Type", "application/json"}},
 			cpr::Body{j.dump()}
@@ -44,7 +44,7 @@ cpr::Response login_user(const char* prefix, const std::string username, const s
 	json j;
 	j["username"] = username;
 	j["password"] = password;
-	std::string url_finished = {getUrl() + prefix};
+	std::string url_finished = {Url() + prefix};
 	std::string token {};
 	cpr::Response r = cpr::Post(cpr::Url{url_finished},
 			cpr::Header{{"Content-Type", "application/json"}},
@@ -53,70 +53,87 @@ cpr::Response login_user(const char* prefix, const std::string username, const s
 	return r;
 }
 
-void handle_login(const std::string username, const std::string password)
+void handle_register_answer(long code)
 {
-	json session = get_session();
+	if ( code == 200 )
+	{
+		std::cout << "New user:" << Username() << '\n';
+	}
+	else if ( code == 400 )
+	{
+		std::cout << "Invalid user credentials" << '\n';
+	}
+	else
+	{
+		std::cout << "Something went wrong" << '\n';
+	}
+}
+
+void handle_login_answer(long code)
+{
+	if ( code == 200 )
+	{
+		std::cout << "User: " << Username() << '\n';
+	}
+	else if ( code >= 400 && code <= 499 )
+	{
+		std::cout << "Invalid user credentials" << '\n';
+	}
+	else
+	{
+		std::cout << "Something went wrong" << '\n';
+	}
+}
+
+long try_login(const std::string username, const std::string password)
+{
+	json session = Session();
 	auto r = login_user("/auth/login", username, password);
 	if ( r.status_code == 200 )
 	{
 		json jr = json::parse(r.text);
 		std::string token = jr["token"];
-		token.erase(0,0);
-		token.erase(token.size(),1);
 		write_session(token, true, jr["id"], username);
-		std::cout << "Logged in: " << username << '\n';
 	}
-	else if ( r.status_code == 400 )
-	{
-		std::cout << "Invalid user credentials" << '\n';
-	}
-	else
-	{
-		std::cout << "Something went wrong" << '\n';
-	}
+	return r.status_code;
 }
 
-void handle_register(const std::string username, const std::string password)
+long try_register(const std::string username, const std::string password)
 {
-	json session = get_session();
+	json session = Session();
 	auto r = register_user("/users", username, password);
 	if ( r.status_code == 200 )
 	{
-		handle_login(username, password);
-		std::cout << "Created user and logged in: " << username << '\n';
+		return try_login(username, password);
 	}
-	else if ( r.status_code == 400 )
-	{
-		std::cout << "Invalid user credentials" << '\n';
-	}
-	else
-	{
-		std::cout << "Something went wrong" << '\n';
-	}
+	return r.status_code;
+}
+
+std::pair<std::string, std::string> get_user_credentials()
+{
+	std::string username {};
+	std::string password {};
+	std::cout << "Username:";
+	std::cin >> username;
+	std::cout << "Password:";
+	std::cin >> password;
+	return {username, password};
 }
 
 void user_login()
 {
 	std::cout << "Login" << '\n';
-	std::string username {};
-	std::string password {};
-	std::cout << "Username:";
-	std::cin >> username;
-	std::cout << "Password:";
-	std::cin >> password;
-	handle_login(username, password); 
+	auto [username, password] = get_user_credentials();
+	long code = try_login(username, password); 
+	handle_login_answer(code);
 }
 
 void user_signup()
 {
 	std::cout << "Register" << '\n';
-	std::string username {};
-	std::string password {};
-	std::cout << "Username:";
-	std::cin >> username;
-	std::cout << "Password:";
-	std::cin >> password;
-	handle_register(username, password); 
+	auto [username, password] = get_user_credentials();
+	long code = try_register(username, password);
+	handle_register_answer(code); 
 }
 
 void not_authenticated_parse(int argc, const char** argv)
@@ -150,7 +167,7 @@ void not_authenticated_parse(int argc, const char** argv)
 
 void start_mssg()
 {
-	json prev_session = get_session();
+	json prev_session = Session();
 	if ( !prev_session["active"] )
 	{
 		std::cout << "Currently not logged in" << '\n';
@@ -206,13 +223,14 @@ void parse(int argc, const char** argv)
 
 int main(int argc, const char** argv)
 {
-	json prev_session = get_session();
+	json prev_session = Session();
 	if ( !prev_session["active"] )
 	{
 		not_authenticated_parse(argc, argv);
 	}
 	else
 	{
+		set_const_vars();
 		parse(argc, argv);
 	}
 	return 0;
